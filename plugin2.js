@@ -20,7 +20,7 @@ export async function search(query) {
       }];
     }
 
-    const data = r.json();
+    const data = await r.json();
     
     if (!data.results || data.results.length === 0) {
       return [{
@@ -32,10 +32,12 @@ export async function search(query) {
     }
 
     return data.results.slice(0,5).map(item => ({
-      id: `${item.media_type}:${item.id}`,
+      id: `tmdb_${item.media_type}_${item.id}`,
       ref: `${item.media_type}:${item.id}`,
       title: item.title || item.name,
-      kind: "movie",
+      kind: item.media_type === "tv"
+  ? "series"
+  : "movie"
       poster: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null
     }));
 
