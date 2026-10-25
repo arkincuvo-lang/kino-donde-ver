@@ -1,14 +1,6 @@
 {
-  "name": "Dónde Ver MX",
-  "description": "Dice donde ver una peli en Disney+ y Prime Video. Guía con TMDB.",
+  "name": "Donde Ver MX",
+  "description": "Donde ver pelis en Disney+ y Prime Video",
   "version": "1.0.0",
-  "apiVersion": 3,
-  "hosts": ["api.themoviedb.org", "image.tmdb.org"],
-  "settings": [
-    {
-      "key": "tmdb_key",
-      "type": "text",
-      "title": "TMDB API Key",
-      "description": "Pega tu API key de themoviedb.org"
-    }
-  ]
+  "hosts": ["api.themoviedb.org"]
+}
