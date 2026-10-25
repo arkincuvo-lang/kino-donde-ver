@@ -1,5 +1,5 @@
 const TMDB = "https://api.themoviedb.org/3";
-const API_KEY =9d185627a7959b27ea6c2b6acfe308a1; // <-- CAMBIA ESTO
+const API_KEY = "9d185627a7959b27ea6c2b6acfe308a1"; // <-- CAMBIA ESTO
 
 const PROVIDERS = {
   "Disney Plus": { name: "Disney+", pkg: "com.disney.disneyplus", label: "Abrir en Disney+" },
