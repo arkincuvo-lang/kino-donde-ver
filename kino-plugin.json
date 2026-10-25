@@ -1,9 +1,9 @@
 {
   "id": "kino-donde-ver",
   "name": "Donde Ver MX",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "apiVersion": 1,
-  "entry": "plugin.js",
+  "entry": "plugin2.js",
   "description": "Dice donde ver en Disney+ y Prime Video",
   "hosts": ["api.themoviedb.org", "image.tmdb.org"],
   "capabilities": ["search", "resolve"]
