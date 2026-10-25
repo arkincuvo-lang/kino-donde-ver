@@ -1,7 +1,10 @@
 {
   "id": "arkincuvo-lang.kino-donde-ver",
   "name": "Donde Ver MX",
-  "description": "Dice donde ver pelis en Disney+ y Prime Video",
-  "version": "1.0.0",
-  "hosts": ["api.themoviedb.org", "image.tmdb.org"]
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "entry": "plugin.js",
+  "description": "Dice donde ver en Disney+ y Prime Video usando TMDB",
+  "hosts": ["api.themoviedb.org", "image.tmdb.org"],
+  "capabilities": ["search", "resolve"]
 }
