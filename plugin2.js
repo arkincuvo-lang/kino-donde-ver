@@ -31,15 +31,20 @@ export async function search(query) {
       }];
     }
 
-    return data.results.slice(0,5).map(item => ({
-      id: `tmdb_${item.media_type}_${item.id}`,
-      ref: `${item.media_type}:${item.id}`,
-      title: item.title || item.name,
-      kind: item.media_type === "tv"
-  ? "series"
-  : "movie"
-      poster: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null
-    }));
+  return data.results
+  .filter(item => item.media_type !== "person")
+  .slice(0, 10)
+  .map(item => ({
+    id: `tmdb_${item.media_type}_${item.id}`,
+    ref: `${item.media_type}:${item.id}`,
+    title: item.title || item.name || "Sin titulo",
+    kind: item.media_type === "tv"
+      ? "series"
+      : "movie",
+    poster: item.poster_path
+      ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
+      : undefined
+  }));
 
   } catch (e) {
     // Este es el importante: si kino.fetch falla por red, lo verás aquí
