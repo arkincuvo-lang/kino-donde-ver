@@ -2,53 +2,26 @@ const TMDB = "https://api.themoviedb.org/3";
 const API_KEY = "9d185627a7959b27ea6c2b6acfe308a1";
 
 const PROVIDERS = {
-  "Disney Plus": {
-    name: "Disney+",
-    pkg: "com.disney.disneyplus"
-  },
-
-  "Star Plus": {
-    name: "Disney+",
-    pkg: "com.disney.disneyplus"
-  },
-
-  "Amazon Prime Video": {
-    name: "Prime Video",
-    pkg: "com.amazon.amazonvideo.livingroom"
-  },
-
-  "Prime Video": {
-    name: "Prime Video",
-    pkg: "com.amazon.amazonvideo.livingroom"
-  },
-
-  "Max": {
-    name: "Max"
-  },
-
-  "Netflix": {
-    name: "Netflix"
-  },
-
-  "Paramount Plus": {
-    name: "Paramount+"
-  },
-
-  "Apple TV Plus": {
-    name: "Apple TV+"
-  }
+  "Disney Plus": "Disney+",
+  "Star Plus": "Disney+",
+  "Prime Video": "Prime Video",
+  "Amazon Prime Video": "Prime Video",
+  "Amazon Video": "Prime Video",
+  "Netflix": "Netflix",
+  "Max": "Max",
+  "Apple TV Plus": "Apple TV+",
+  "Paramount Plus": "Paramount+"
 };
 
 async function getMXProviders(type, id) {
   try {
+
     const url =
       `${TMDB}/${type === "tv" ? "tv" : "movie"}/${id}/watch/providers?api_key=${API_KEY}`;
 
     const r = await kino.fetch(url);
 
-    if (!r.ok) {
-      return [];
-    }
+    if (!r.ok) return [];
 
     const data = r.json();
 
@@ -56,26 +29,14 @@ async function getMXProviders(type, id) {
       data.results?.MX ||
       data.results?.US;
 
-    if (!region) {
-      return [];
-    }
+    if (!region) return [];
 
-    // Solo servicios por suscripción
     const all = [
       ...(region.flatrate || [])
     ];
 
-    const names = [];
-
-    for (const p of all) {
-      const provider = PROVIDERS[p.provider_name];
-
-      if (provider && !names.includes(provider.name)) {
-        names.push(provider.name);
-      }
-    }
-
-    return names;
+    // DEVUELVE TODOS LOS NOMBRES PARA VER QUÉ ESTÁ MANDANDO TMDB
+    return all.map(p => p.provider_name);
 
   } catch (e) {
     return [];
@@ -89,9 +50,7 @@ export async function search(query) {
       ? query
       : (query.q || "");
 
-  if (!q.trim()) {
-    return [];
-  }
+  if (!q) return [];
 
   const url =
     `${TMDB}/search/multi?api_key=${API_KEY}` +
@@ -103,58 +62,49 @@ export async function search(query) {
 
     const r = await kino.fetch(url);
 
-    if (!r.ok) {
-      return [];
-    }
+    if (!r.ok) return [];
 
     const data = r.json();
 
-    const items = (data.results || [])
-      .filter(item => item.media_type !== "person")
-      .slice(0, 15);
+    return await Promise.all(
 
-    const results = await Promise.all(
-      items.map(async item => {
+      (data.results || [])
+        .filter(x => x.media_type !== "person")
+        .slice(0, 10)
+        .map(async item => {
 
-        const providers =
-          await getMXProviders(item.media_type, item.id);
+          const providers =
+            await getMXProviders(
+              item.media_type,
+              item.id
+            );
 
-        return {
-          id: `tmdb_${item.media_type}_${item.id}`,
-          ref: `${item.media_type}:${item.id}`,
+          const label =
+            providers.length
+              ? ` • ${providers.join(" | ")}`
+              : "";
 
-        title: `${item.title || item.name || "Sin título"} ${
-  providers.length ? "• " + providers.join(" / ") : ""
-}`,
+          return {
 
-          kind:
-            item.media_type === "tv"
-              ? "series"
-              : "movie",
+            id: `tmdb_${item.media_type}_${item.id}`,
 
-          year:
-            (item.release_date || item.first_air_date || "")
-              .split("-")[0],
+            ref: `${item.media_type}:${item.id}`,
 
-          poster:
-            item.poster_path
-              ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
-              : undefined,
+            title:
+              `${item.title || item.name || "Sin título"}${label}`,
 
-          overview: item.overview,
+            kind:
+              item.media_type === "tv"
+                ? "series"
+                : "movie",
 
-          rating: item.vote_average,
-
-          ids: {
-            tmdb: item.id
-          },
-
-          badges: providers
-        };
-      })
+            poster:
+              item.poster_path
+                ? `https://image.tmdb.org/t/p/w342${item.poster_path}`
+                : undefined
+          };
+        })
     );
-
-    return results;
 
   } catch (e) {
     return [];
@@ -166,13 +116,12 @@ export async function resolve(ref) {
   const [type, tmdbId] = ref.split(":");
 
   const url =
-    `${TMDB}/${type === "tv" ? "tv" : "movie"}`
-    + `/${tmdbId}/watch/providers?api_key=${API_KEY}`;
+    `${TMDB}/${type === "tv" ? "tv" : "movie"}/${tmdbId}/watch/providers?api_key=${API_KEY}`;
 
   const r = await kino.fetch(url);
 
   if (!r.ok) {
-    throw new Error("TMDB no respondió");
+    throw new Error("Error TMDB");
   }
 
   const data = r.json();
@@ -182,57 +131,40 @@ export async function resolve(ref) {
     data.results?.US;
 
   if (!region) {
-    throw new Error("No hay proveedores disponibles");
+    throw new Error("No hay proveedores");
   }
 
   const all = [
     ...(region.flatrate || [])
   ];
 
-  const available =
-    all.filter(
-      p => PROVIDERS[p.provider_name]
-    );
+  const disney = all.find(p =>
+    p.provider_name === "Disney Plus" ||
+    p.provider_name === "Star Plus"
+  );
 
-  if (!available.length) {
-    throw new Error(
-      "No disponible en proveedores soportados"
-    );
+  if (disney) {
+    return {
+      url: "https://www.disneyplus.com",
+      title: "Abrir Disney+"
+    };
   }
 
-  const provider =
-    PROVIDERS[available[0].provider_name];
+  const prime = all.find(p =>
+    p.provider_name === "Prime Video" ||
+    p.provider_name === "Amazon Prime Video" ||
+    p.provider_name === "Amazon Video"
+  );
 
-  let webUrl;
-
-  switch (provider.name) {
-
-    case "Disney+":
-      webUrl = "https://www.disneyplus.com";
-      break;
-
-    case "Prime Video":
-      webUrl = "https://www.primevideo.com";
-      break;
-
-    case "Netflix":
-      webUrl = "https://www.netflix.com";
-      break;
-
-    case "Max":
-      webUrl = "https://play.max.com";
-      break;
-
-    case "Paramount+":
-      webUrl = "https://www.paramountplus.com";
-      break;
-
-    default:
-      webUrl = "https://www.themoviedb.org";
+  if (prime) {
+    return {
+      url: "https://www.primevideo.com",
+      title: "Abrir Prime Video"
+    };
   }
 
-  return {
-    url: webUrl,
-    title: `Abrir en ${provider.name}`
-  };
+  throw new Error(
+    "Disponible en: " +
+    all.map(p => p.provider_name).join(", ")
+  );
 }
