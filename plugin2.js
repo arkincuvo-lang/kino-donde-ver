@@ -36,7 +36,11 @@ async function getMXProviders(type, id) {
     ];
 
     // DEVUELVE TODOS LOS NOMBRES PARA VER QUÉ ESTÁ MANDANDO TMDB
-    return all.map(p => p.provider_name);
+const providers = [...new Set(
+  all.map(p =>
+    PROVIDERS[p.provider_name] || p.provider_name
+  )
+)];
 
   } catch (e) {
     return [];
