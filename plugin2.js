@@ -4,13 +4,27 @@ const API_KEY = "9d185627a7959b27ea6c2b6acfe308a1";
 const PROVIDERS = {
   "Disney Plus": "Disney+",
   "Star Plus": "Disney+",
+
   "Prime Video": "Prime Video",
   "Amazon Prime Video": "Prime Video",
+  "Amazon Prime Video with Ads": "Prime Video",
   "Amazon Video": "Prime Video",
+
   "Netflix": "Netflix",
   "Max": "Max",
   "Apple TV Plus": "Apple TV+",
-  "Paramount Plus": "Paramount+"
+  "Paramount Plus": "Paramount+",
+
+  "Pluto TV": "Pluto TV",
+  "Tubi TV": "Tubi",
+  "Crunchyroll": "Crunchyroll",
+  "Plex": "Plex",
+  "The Roku Channel": "Roku",
+  "MUBI": "MUBI",
+  "Runtime": "Runtime",
+  "Filmzie": "Filmzie",
+  "VIX": "ViX",
+  "Claro video": "Claro Video"
 };
 
 async function getMXProviders(type, id) {
@@ -21,25 +35,43 @@ async function getMXProviders(type, id) {
 
     const r = await kino.fetch(url);
 
-    if (!r.ok) return [];
+    if (!r.ok) return "";
 
     const data = r.json();
 
-    const region =
-      data.results?.MX ||
-      data.results?.US;
+    const regions = [];
 
-    if (!region) return [];
+    if (data.results?.MX) regions.push("MX");
+    if (data.results?.US) regions.push("US");
 
-    const all = [
-      ...(region.flatrate || [])
-    ];
+    const providers = [];
 
-    // DEVUELVE TODOS LOS NOMBRES PARA VER QUÉ ESTÁ MANDANDO TMDB
-    return all.map(p => p.provider_name);
+    for (const region of regions) {
+
+      const all = [
+        ...(data.results[region].flatrate || [])
+      ];
+
+      for (const p of all) {
+
+        const name =
+          PROVIDERS[p.provider_name] ||
+          p.provider_name;
+
+        providers.push(name);
+      }
+    }
+
+    const uniqueProviders =
+      [...new Set(providers)];
+
+    if (uniqueProviders.length === 0)
+      return "";
+
+    return `${uniqueProviders.join(" / ")} [${regions.join("/")}]`;
 
   } catch (e) {
-    return [];
+    return "";
   }
 }
 
@@ -73,16 +105,16 @@ export async function search(query) {
         .slice(0, 10)
         .map(async item => {
 
-          const providers =
-            await getMXProviders(
-              item.media_type,
-              item.id
-            );
+const providers =
+  await getMXProviders(
+    item.media_type,
+    item.id
+  );
 
-          const label =
-            providers.length
-              ? ` • ${providers.join(" | ")}`
-              : "";
+const label =
+  providers
+    ? ` • ${providers}`
+    : "";
 
           return {
 
