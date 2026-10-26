@@ -23,32 +23,6 @@ async function getMXProviders(type, id) {
   }
 }
 
-export async function search(query) {
-  const q = typeof query === "string" ? query : (query.q || query.query || "");
-  if (!q || q.trim().length < 1) return [];
-  
-  const url = `${TMDB}/search/multi?api_key=${API_KEY}&language=es-MX&query=${encodeURIComponent(q)}&include_adult=false`;
-  const r = await kino.fetch(url);
-  if (!r.ok) return [];
-  const data = r.json();
-
-  const items = (data.results || []).filter(x => x.media_type !== 'person').slice(0, 8);
-
-  const withProviders = await Promise.all(items.map(async item => {
-    const provs = await getMXProviders(item.media_type, item.id);
-    const label = provs.length ? ` • ${provs.join(" / ")}` : "";
-    return {
-      id: `tmdb_${item.media_type}_${item.id}`,
-      ref: `${item.media_type}:${item.id}`,
-      title: `${item.title || item.name || "Sin titulo"}${label}`,
-      kind: item.media_type === "tv" ? "series" : "movie",
-      poster: item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : null
-    };
-  }));
-
-  return withProviders;
-}
-
 export async function resolve(ref) {
   const [type, tmdbId] = ref.split(":");
   const url = `${TMDB}/${type === "tv" ? "tv" : "movie"}/${tmdbId}/watch/providers?api_key=${API_KEY}`;
@@ -65,9 +39,16 @@ export async function resolve(ref) {
     throw new Error(`No está en Disney+ ni Prime. Está en: ${all.map(p=>p.provider_name).join(", ")}`);
   }
   
-  const p = PROVIDERS[wanted[0].provider_name];
+  const providerName = wanted[0].provider_name;
+  const p = PROVIDERS[providerName];
+  
+  // Para Xiaomi Stick usamos https, Kino lo acepta y Android lo manda a la app
+  const webUrl = p.name === "Disney+" 
+    ? "https://www.disneyplus.com/search" 
+    : "https://www.primevideo.com/search/ref=atv_nb_sr?phrase=";
+  
   return {
-    url: `intent://#Intent;action=android.intent.action.VIEW;package=${p.pkg};end`,
+    url: webUrl,
     title: `Abrir en ${p.name}`
   };
 }
