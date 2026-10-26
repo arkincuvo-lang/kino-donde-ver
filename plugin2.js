@@ -123,10 +123,9 @@ export async function search(query) {
           id: `tmdb_${item.media_type}_${item.id}`,
           ref: `${item.media_type}:${item.id}`,
 
-          title:
-            item.title ||
-            item.name ||
-            "Sin título",
+        title: `${item.title || item.name || "Sin título"} ${
+  providers.length ? "• " + providers.join(" / ") : ""
+}`,
 
           kind:
             item.media_type === "tv"
