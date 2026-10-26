@@ -1,5 +1,5 @@
 const TMDB = "https://api.themoviedb.org/3";
-const API_KEY = "TU_API_KEY";
+const API_KEY = "9d185627a7959b27ea6c2b6acfe308a1";
 
 const PROVIDERS = {
   "Disney Plus": {
