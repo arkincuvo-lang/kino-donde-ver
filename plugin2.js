@@ -54,5 +54,21 @@ return data.results
 }
 
 export async function resolve(ref) {
-  return { url: "https://www.disneyplus.com", title: "Abrir Disney+ prueba" };
+  const [type, tmdbId] = ref.split(":");
+  const url = `${TMDB}/${type === "tv" ? "tv" : "movie"}/${tmdbId}/watch/providers?api_key=${API_KEY}`;
+  const r = await kino.fetch(url);
+  const data = r.json();
+  const mx = data.results?.MX || data.results?.US;
+  if (!mx) throw new Error("No hay datos MX");
+  
+  const all = [...(mx.flatrate||[]), ...(mx.free||[]), ...(mx.rent||[]), ...(mx.buy||[])];
+  const wanted = all.filter(p => PROVIDERS[p.provider_name]);
+  if (wanted.length === 0) throw new Error(`No está en Disney+ ni Prime. Está en: ${all.map(p=>p.provider_name).join(", ")}`);
+  
+  const p = PROVIDERS[wanted[0].provider_name];
+  // ESTE es el que sí abre la app en Xiaomi Stick
+  return {
+    url: `intent://#Intent;action=android.intent.action.VIEW;package=${p.pkg};end`,
+    title: `Abrir en ${p.name}`
+  };
 }
